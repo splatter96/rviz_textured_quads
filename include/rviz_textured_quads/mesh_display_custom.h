@@ -37,9 +37,7 @@
 #include <Eigen/Geometry>
 #include <OGRE/OgreEntity.h>
 #include <OGRE/OgreManualObject.h>
-#include <OGRE/OgreRenderQueueListener.h>
 #include <OGRE/OgreRenderSystem.h>
-#include <OGRE/OgreRenderTargetListener.h>
 #include <OGRE/OgreRenderWindow.h>
 #include <OGRE/OgreRoot.h>
 #include <OGRE/OgreSceneNode.h>
@@ -85,7 +83,7 @@ class TfFrameProperty;
  * \class MeshDisplayCustom
  * \brief Uses a pose from topic + offset to render a bounding object with shape, size and color
  */
-class MeshDisplayCustom: public rviz::Display,  public Ogre::RenderTargetListener, public Ogre::RenderQueueListener
+class MeshDisplayCustom: public rviz::Display
 {
   Q_OBJECT
 public:
@@ -96,8 +94,6 @@ public:
   virtual void onInitialize();
   virtual void update(float wall_dt, float ros_dt);
   virtual void reset();
-
-  virtual void preRenderTargetUpdate(const Ogre::RenderTargetEvent& evt);
 
 private Q_SLOTS:
   void updateMeshProperties();
@@ -111,7 +107,7 @@ protected:
   virtual void onDisable();
 
   // This is called by incomingMessage().
-  void processImage(int index, const sensor_msgs::Image& msg);
+  void processImage(const sensor_msgs::Image& msg);
 
   virtual void subscribe();
   virtual void unsubscribe();
@@ -120,22 +116,20 @@ private:
   void clear();
   void updateCamera(bool update_image);
 
-  void createProjector(int index);
-  void addDecalToMaterial(int index, const Ogre::String& matName);
+  void createProjector();
+  void addDecalToMaterial(const Ogre::String& matName);
 
   void updateImage(const sensor_msgs::Image::ConstPtr& image);
   void constructQuads(const sensor_msgs::Image::ConstPtr& images);
 
   shape_msgs::Mesh constructMesh(geometry_msgs::Pose mesh_origin, float width, float height, float border_size);
-  void clearStates();
 
   RosTopicProperty* image_topic_property_;
   TfFrameProperty* tf_frame_property_;
   FloatProperty* meters_per_pixel_property_;
   ros::Subscriber image_sub_;
 
-  std::vector<shape_msgs::Mesh> last_meshes_;
-  std::vector<geometry_msgs::Pose> mesh_poses_;
+  geometry_msgs::Pose mesh_pose_;
   int img_widths_, img_heights_;
   float physical_widths_, physical_heights_;
   std::vector<float> border_colors_;
@@ -145,7 +139,7 @@ private:
 
   bool new_image_;
   sensor_msgs::Image::ConstPtr cur_image_;
-  std::vector<sensor_msgs::Image::ConstPtr> last_images_;
+  sensor_msgs::Image::ConstPtr last_image_;
 
   Ogre::SceneNode* mesh_nodes_;
   Ogre::ManualObject* manual_objects_;
@@ -153,11 +147,8 @@ private:
   ROSImageTexture* textures_;
 
   Ogre::Frustum* decal_frustums_;
-  // need multiple filters (back, up, down, left, right)
-  std::vector<Ogre::Frustum*> filter_frustums_;
+  Ogre::Frustum* filter_frustum_;
   Ogre::SceneNode* projector_nodes_;
-
-  RenderPanel* render_panel_;  // this is the active render panel
 
   boost::mutex mesh_mutex_;
 };

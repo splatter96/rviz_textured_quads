@@ -125,11 +125,10 @@ void MeshDisplayCustom::createProjector()
   projector_nodes_ = scene_manager_->getRootSceneNode()->createChildSceneNode();
   projector_nodes_->attachObject(decal_frustums_);
 
-  Ogre::SceneNode* filter_node;
-
   filter_frustum_ = new Ogre::Frustum();
   filter_frustum_->setProjectionType(Ogre::PT_ORTHOGRAPHIC);
 
+  Ogre::SceneNode* filter_node;
   filter_node = projector_nodes_->createChildSceneNode();
   filter_node->attachObject(filter_frustum_);
   filter_node->setOrientation(Ogre::Quaternion(Ogre::Degree(90), Ogre::Vector3::UNIT_Y));
@@ -149,8 +148,7 @@ void MeshDisplayCustom::addDecalToMaterial(const Ogre::String& matName)
   Ogre::ResourceGroupManager& resource_manager = Ogre::ResourceGroupManager::getSingleton();
   Ogre::String resource_group_name = "decal_textures_folder";
 
-  if (!resource_manager.resourceGroupExists(resource_group_name))
-  {
+  if (!resource_manager.resourceGroupExists(resource_group_name)){
     resource_manager.createResourceGroup(resource_group_name);
     resource_manager.addResourceLocation(ros::package::getPath("rviz_textured_quads") +
         "/tests/textures/", "FileSystem", resource_group_name, false);
@@ -159,7 +157,7 @@ void MeshDisplayCustom::addDecalToMaterial(const Ogre::String& matName)
   // loads files into our resource manager
   resource_manager.loadResourceGroup(resource_group_name);
 
-  Ogre::TextureUnitState* tex_state = pass->createTextureUnitState();  // "Decal.png");
+  Ogre::TextureUnitState* tex_state = pass->createTextureUnitState();
   tex_state->setTextureName(textures_->getTexture()->getName());
   tex_state->setProjectiveTexturing(true, decal_frustums_);
 
@@ -340,10 +338,7 @@ void MeshDisplayCustom::updateMeshProperties()
   //Ogre::ColourValue diffuse_color(0.0f, 0.0f, 0.0f, 1.0f);
   pass->setDiffuse(0.0f, 0.0f, 0.0f, 0.0f);
 
-  Ogre::ColourValue ambient_color(border_colors_[0],
-      border_colors_[1], border_colors_[2], border_colors_[3]);
-  pass->setAmbient(ambient_color);
-
+  pass->setAmbient(border_colors_[0], border_colors_[1], border_colors_[2]);
   pass->setSpecular(0.0f, 0.0f, 0.0f, 1.0f);
   pass->setShininess(64.0f);
 
@@ -392,7 +387,7 @@ void MeshDisplayCustom::load()
 
   border_colors_.resize(4);
   for (size_t i = 0; i < 4; ++i) {
-    border_colors_[i] = 1.0;
+    border_colors_[i] = 1.0f;
   }
 
   static int count = 0;
@@ -405,8 +400,7 @@ void MeshDisplayCustom::load()
   Ogre::String resource_group_name =  ss.str();
   Ogre::String material_name = resource_group_name + "MeshMaterial";
 
-  if (!rg_mgr.resourceGroupExists(resource_group_name))
-  {
+  if (!rg_mgr.resourceGroupExists(resource_group_name)) {
     rg_mgr.createResourceGroup(resource_group_name);
 
     mesh_materials_ = material_manager.create(material_name, resource_group_name);
@@ -415,10 +409,7 @@ void MeshDisplayCustom::load()
     Ogre::ColourValue self_illumnation_color(0.0f, 0.0f, 0.0f, border_colors_[3]);
     pass->setSelfIllumination(self_illumnation_color);
 
-    Ogre::ColourValue ambient_color(border_colors_[0],
-        border_colors_[1], border_colors_[2], border_colors_[3]);
-    pass->setAmbient(ambient_color);
-
+    pass->setAmbient(border_colors_[0], border_colors_[1], border_colors_[2]);
     pass->setSpecular(1.0f, 1.0f, 1.0f, 1.0f);
     pass->setShininess(64.0f);
     pass->setDiffuse(0.0f, 0.0f, 0.0f, 0.0f);
@@ -447,10 +438,7 @@ void MeshDisplayCustom::update(float wall_dt, float ros_dt)
     // need to run these every frame in case tf has changed,
     // but could detect that.
     try {
-      //ros::WallTime start = ros::WallTime::now();
       constructQuads(cur_image_);
-      //ros::WallDuration diff = ros::WallTime::now() - start;
-      //std::cout << "Time1: " << diff.toSec()*1000.0f << std::endl;
     } catch (std::string& e) {
       setStatus(StatusProperty::Error, "Display Image", e.c_str());
       return;
@@ -466,8 +454,11 @@ void MeshDisplayCustom::update(float wall_dt, float ros_dt)
 
   if (textures_ && !image_topic_property_->getTopic().isEmpty()) {
     try {
+      //ros::WallTime start = ros::WallTime::now();
       //updateCamera(textures_->update());
       updateCamera(false);
+      //ros::WallDuration diff = ros::WallTime::now() - start;
+      //std::cout << "Time1: " << diff.toSec()*1000.0f << std::endl;
     } catch (UnsupportedImageEncoding& e) {
       setStatus(StatusProperty::Error, "Display Image", e.what());
       return;
